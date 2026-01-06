@@ -9,56 +9,57 @@ This project ingests application logs from multiple sources into Elasticsearch a
 ### System Architecture
 
 ```
-┌─────────────────┐
-│  Applications   │
-│   (Services)    │
-└────────┬────────┘
-         │ POST /logs
-         │ (timestamp, level, source, message)
-         ▼
+                  ┌─────────────────┐
+                  │  Applications   │
+                  │   (Services)    │
+                  └────────┬────────┘
+                           │ POST /logs
+                           │ (timestamp, level, source, message)
+                           ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Express.js API Server (:5000)              │
 │                                                         │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │            NLP Analysis Engine                   │  │
-│  │  - Sentiment Analysis (positive/neutral/negative)│  │
-│  │  - Keyword Extraction                            │  │
-│  │  - Entity Extraction (IPs, users, error codes)   │  │
-│  │  - Severity Scoring (0-10)                       │  │
-│  │  - Auto-categorization                           │  │
-│  └──────────────┬───────────────────────────────────┘  │
-│                 │                                       │
-│  ┌──────────────▼───────────────────────────────────┐  │
-│  │         Alert Rule Evaluator                     │  │
-│  │  - Every 60 seconds (periodic)                   │  │
-│  │  - After each log ingestion (event-driven)       │  │
-│  │  - Checks conditions: count, error_rate, source  │  │
-│  │  - Generates alerts + suggested actions          │  │
-│  └──────────────┬───────────────────────────────────┘  │
-│                 │                                       │
-└─────────────────┼───────────────────────────────────────┘
-                  │
-                  ▼
+│  ┌──────────────────────────────────────────────────┐   │
+│  │            NLP Analysis Engine                   │   │
+│  │  - Sentiment Analysis (positive/neutral/negative)│   │
+│  │  - Keyword Extraction                            │   │
+│  │  - Entity Extraction (IPs, users, error codes)   │   │
+│  │  - Severity Scoring (0-10)                       │   │
+│  │  - Auto-categorization                           │   │
+│  └──────────────────────────────────────────────────┘   │
+│                          │                              │
+                           ▼                              │
+│  ┌──────────────-───────────────────────────────────┐   │
+│  │         Alert Rule Evaluator                     │   │
+│  │  - Every 60 seconds (periodic)                   │   │
+│  │  - After each log ingestion (event-driven)       │   │
+│  │  - Checks conditions: count, error_rate, source  │   │
+│  │  - Generates alerts + suggested actions          │   │
+│  └──────────────────────────────────────────────────┘   │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
 ┌─────────────────────────────────────────────────────────┐
 │         Elasticsearch Cluster (:10200)                  │
 │                                                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
-│  │    logs     │  │   alerts    │  │ alert_rules │    │
-│  │  (enriched) │  │  (history)  │  │ (conditions)│    │
-│  └─────────────┘  └─────────────┘  └─────────────┘    │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │
+│  │    logs     │  │   alerts    │  │ alert_rules │      │
+│  │  (enriched) │  │  (history)  │  │ (conditions)│      │
+│  └─────────────┘  └─────────────┘  └─────────────┘      │
 │                                                         │
-│  ┌─────────────┐                                       │
-│  │  anomalies  │                                       │
-│  │  (patterns) │                                       │
-│  └─────────────┘                                       │
+│  ┌─────────────┐                                        │
+│  │  anomalies  │                                        │
+│  │  (patterns) │                                        │
+│  └─────────────┘                                        │
 └─────────────────────────────────────────────────────────┘
-                  │
-                  ▼
+                           │
+                           ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Kibana Dashboard (:10601)                  │
-│  - Visualize logs and trends                           │
-│  - Dev Tools (index management)                        │
-│  - Discover (log exploration)                          │
+│  - Visualize logs and trends                            │
+│  - Dev Tools (index management)                         │
+│  - Discover (log exploration)                           │
 └─────────────────────────────────────────────────────────┘
 ```
 
