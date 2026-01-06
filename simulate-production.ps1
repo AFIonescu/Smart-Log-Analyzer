@@ -6,35 +6,35 @@ $apiUrl = "http://localhost:5000/logs"
 $services = @("payment-service", "auth-service", "user-service", "database-service", "api-gateway", "cache-service")
 
 $errorMessages = @(
-    "Payment processing failed - gateway timeout",
-    "Database connection pool exhausted",
-    "Authentication token expired",
-    "Cache miss rate exceeding threshold",
-    "API rate limit exceeded",
-    "Service unavailable - circuit breaker open",
-    "Failed to connect to external API",
-    "Invalid request payload",
-    "Session timeout for user",
-    "Memory usage critical"
+    "Payment processing failed - gateway timeout from 10.0.2.15",
+    "Database connection pool exhausted - DB_CONN_ERROR",
+    "Authentication token expired for user_4523",
+    "Cache miss rate exceeding threshold - CACHE_MISS_HIGH",
+    "API rate limit exceeded from 192.168.1.100",
+    "Service unavailable - circuit breaker open - SVC_UNAVAILABLE",
+    "Failed to connect to external API at 52.14.88.210",
+    "Invalid request payload - INVALID_PAYLOAD from 172.16.0.45",
+    "Session timeout for user_8192",
+    "Memory usage critical - MEM_CRITICAL_ERROR"
 )
 
 $infoMessages = @(
-    "User login successful",
-    "Payment processed successfully",
-    "Cache warmed up",
+    "User login successful for user_5021 from 192.168.0.105",
+    "Payment processed successfully for user_7834",
+    "Cache warmed up - accessed from 10.0.1.20",
     "Health check passed",
-    "Request completed",
-    "Session created",
-    "Data synchronized",
+    "Request completed from 172.20.10.5",
+    "Session created for user_3456",
+    "Data synchronized from 10.0.0.50",
     "Backup completed"
 )
 
 $warnMessages = @(
-    "High latency detected",
-    "Cache hit rate below 50%",
-    "Slow query detected",
-    "Memory usage at 75%",
-    "Request queue growing"
+    "High latency detected from 192.168.5.100 - LATENCY_WARNING",
+    "Cache hit rate below 50% - CACHE_LOW",
+    "Slow query detected - SLOW_QUERY_WARN",
+    "Memory usage at 75% - MEM_WARNING",
+    "Request queue growing from 10.1.1.80"
 )
 
 Write-Host "🚀 Starting Production Simulator..." -ForegroundColor Green
