@@ -4,7 +4,7 @@ Elasticsearch-based log analysis system with NLP-powered insights and automated 
 
 ## Project Description - Milestone 1
 
-This project ingests application logs from multiple sources into Elasticsearch and uses NLP-powered analysis to detect anomalies, errors, and security threats in real-time. The system automatically categorizes logs by severity, extracts entities (IPs, user IDs, error codes), and triggers intelligent alerts with suggested remediation actions based on configurable rules.
+This project ingests application logs from multiple sources into Elasticsearch and uses NLP-powered analysis to detect errors and security threats in real-time. The system automatically categorizes logs by severity, extracts entities (IPs, user IDs, error codes), and triggers intelligent alerts with suggested remediation actions based on configurable rules.
 
 ### System Architecture
 
