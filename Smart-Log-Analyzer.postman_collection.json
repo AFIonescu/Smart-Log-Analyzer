@@ -1,0 +1,808 @@
+{
+  "info": {
+    "name": "Smart Log Analyzer API Tests",
+    "description": "Comprehensive testing suite for Smart Log Analyzer API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "Smart-Log-Analyzer"
+  },
+  "item": [
+    {
+      "name": "System Health Tests",
+      "item": [
+        {
+          "name": "Test 1.1: Check Elasticsearch Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has cluster_name\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('cluster_name');",
+                  "});",
+                  "",
+                  "pm.test(\"Status is green or yellow\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.be.oneOf(['green', 'yellow']);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 1000ms\", function() {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 1.2: Get API Root Information",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains API version\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.version).to.equal('1.0.0');",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains docs link\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.docs).to.equal('/docs');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Log Ingestion Tests",
+      "item": [
+        {
+          "name": "Test 2.1: Create New Log Entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains _id\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('_id');",
+                  "    pm.environment.set('log_id', jsonData._id);",
+                  "});",
+                  "",
+                  "pm.test(\"NLP analysis is present\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('nlp_analysis');",
+                  "    pm.expect(jsonData.nlp_analysis).to.have.property('sentiment');",
+                  "    pm.expect(jsonData.nlp_analysis).to.have.property('keywords');",
+                  "});",
+                  "",
+                  "pm.test(\"Category is assigned\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('category');",
+                  "});",
+                  "",
+                  "pm.test(\"Severity score is calculated\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('severity_score');",
+                  "    pm.expect(jsonData.severity_score).to.be.a('number');",
+                  "    pm.expect(jsonData.severity_score).to.be.within(0, 10);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"level\": \"ERROR\",\n  \"source\": \"payment-service\",\n  \"message\": \"Payment processing failed for user 12345 - connection timeout\",\n  \"metadata\": {\n    \"user_id\": \"12345\",\n    \"transaction_id\": \"txn_98765\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/logs",
+              "host": ["{{base_url}}"],
+              "path": ["logs"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 2.2: Create Log with Missing Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message present\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"level\": \"ERROR\",\n  \"message\": \"Incomplete log entry\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/logs",
+              "host": ["{{base_url}}"],
+              "path": ["logs"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 2.3: Delete Log Entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Delete confirmation message\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('deleted');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/logs/{{log_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["logs", "{{log_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Log Search Tests",
+      "item": [
+        {
+          "name": "Test 3.1: Search All Logs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has logs array\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('logs');",
+                  "    pm.expect(jsonData.logs).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Total hits is present\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('total_hits');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/logs/search",
+              "host": ["{{base_url}}"],
+              "path": ["logs", "search"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 3.2: Search by Level",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All results have ERROR level\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.logs.forEach(function(log) {",
+                  "        pm.expect(log.level).to.equal('ERROR');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/logs/search?level=ERROR",
+              "host": ["{{base_url}}"],
+              "path": ["logs", "search"],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "ERROR"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 3.3: Search by Source",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All results from payment-service\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.logs.forEach(function(log) {",
+                  "        pm.expect(log.source).to.equal('payment-service');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/logs/search?source=payment-service",
+              "host": ["{{base_url}}"],
+              "path": ["logs", "search"],
+              "query": [
+                {
+                  "key": "source",
+                  "value": "payment-service"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 3.4: Full-Text Search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Results contain search term\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.total_hits).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/logs/search?q=payment",
+              "host": ["{{base_url}}"],
+              "path": ["logs", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "payment"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Analytics Tests",
+      "item": [
+        {
+          "name": "Test 4.1: Get Error Analytics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has total_errors\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('total_errors');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has top_sources\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('top_sources');",
+                  "    pm.expect(jsonData.top_sources).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has time_series data\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('time_series');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/errors",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "errors"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 4.2: Get Health Metrics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has overall_health\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('overall_health');",
+                  "    pm.expect(jsonData.overall_health).to.be.oneOf(['healthy', 'warning', 'critical']);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has metrics\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('metrics');",
+                  "    pm.expect(jsonData.metrics).to.have.property('total_logs');",
+                  "    pm.expect(jsonData.metrics).to.have.property('error_rate');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/metrics/health",
+              "host": ["{{base_url}}"],
+              "path": ["metrics", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Alert Management Tests",
+      "item": [
+        {
+          "name": "Test 5.1: Create Alert Rule",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains rule_id\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('rule_id');",
+                  "    pm.environment.set('rule_id', jsonData._id);",
+                  "});",
+                  "",
+                  "pm.test(\"Rule is enabled by default\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.enabled).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"High Error Rate - Payment Service\",\n  \"description\": \"Triggers when payment service error rate exceeds 10%\",\n  \"conditions\": {\n    \"source\": \"payment-service\",\n    \"level\": \"ERROR\",\n    \"error_rate_threshold\": 10,\n    \"time_window_minutes\": 5\n  },\n  \"severity\": \"high\",\n  \"channels\": [\"email\", \"slack\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/alerts/rules",
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "rules"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 5.2: Get All Alert Rules",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has rules array\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('rules');",
+                  "    pm.expect(jsonData.rules).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alerts/rules",
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "rules"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 5.3: Get Alerts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has alerts array\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('alerts');",
+                  "    pm.expect(jsonData.alerts).to.be.an('array');",
+                  "});",
+                  "",
+                  "if (pm.response.json().total > 0) {",
+                  "    pm.environment.set('alert_id', pm.response.json().alerts[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alerts",
+              "host": ["{{base_url}}"],
+              "path": ["alerts"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 5.4: Get Alerts by Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All alerts have open status\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.alerts.forEach(function(alert) {",
+                  "        pm.expect(alert.status).to.equal('open');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alerts?status=open",
+              "host": ["{{base_url}}"],
+              "path": ["alerts"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 5.5: Acknowledge Alert",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Alert acknowledged successfully\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('acknowledged');",
+                  "    pm.expect(jsonData.status).to.equal('acknowledged');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"acknowledged\",\n  \"acknowledged_by\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/alerts/{{alert_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "{{alert_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 5.6: Resolve Alert",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Alert resolved successfully\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('resolved');",
+                  "    pm.expect(jsonData.status).to.equal('resolved');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\",\n  \"resolved_by\": \"admin\",\n  \"notes\": \"Issue fixed by restarting payment gateway\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/alerts/{{alert_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "{{alert_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Handling Tests",
+      "item": [
+        {
+          "name": "Test 6.1: Invalid Alert Status Update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message present\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"invalid_status\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/alerts/{{alert_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "{{alert_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test 6.2: Non-existent Log Deletion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function() {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message indicates not found\", function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.include('not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/logs/nonexistent_id_12345",
+              "host": ["{{base_url}}"],
+              "path": ["logs", "nonexistent_id_12345"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "default"
+    },
+    {
+      "key": "log_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "alert_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "rule_id",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
